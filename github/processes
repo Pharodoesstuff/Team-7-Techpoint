@@ -1,0 +1,825 @@
+---
+name: build-miso-regional-queue-model
+description: Build and validate a presentation-ready Jupyter notebook for the MISO regional queue, project-risk, priority, and queue-cap proposal.
+agent: agent
+argument-hint: Optional repository data directory or requested notebook filename
+---
+
+# Build the MISO regional queue model
+
+Act as a senior electric-power-system planner, energy-market policy analyst, and applied data scientist. Work autonomously in this repository. Your primary deliverable is a fully executable, clearly explained Jupyter notebook written in Python. The notebook must translate the team's complete policy proposal into a transparent analytical prototype without replacing, weakening, or materially changing the proposal.
+
+Read this entire instruction file before editing anything. Inspect the repository and available data first. Reuse existing useful work when present, but correct methodological errors. Do not fabricate unavailable data, results, model performance, capacity values, legal conclusions, engineering conclusions, or project-readiness information.
+
+## Required final deliverable
+
+Create and execute:
+
+`notebooks/MISO_Regional_Queue_Risk_and_Priority_Model.ipynb`
+
+The notebook must run from beginning to end in GitHub Codespaces and ordinary Jupyter without manual code edits. It may ask the user to select a data directory only if automatic file discovery fails. Use repository-relative paths through `pathlib`; never hardcode a local machine path.
+
+The notebook must perform all of the following:
+
+1. Load and validate the supplied MISO generator interconnection queue data.
+2. Load and validate the supplied synthetic state-level large-load forecast.
+3. Divide the existing queue into smaller regional queues, using state as the primary demonstration level while retaining MISO Study Group and Transmission Owner for cross-regional analysis.
+4. Build and honestly compare appropriate historical project-withdrawal risk models.
+5. Select the best defensible model using chronological validation, probability quality, stability, and explainability rather than selecting the model with the highest in-sample accuracy.
+6. Assign every eligible current open project a continuous risk estimate, a standardized 0–9 relative risk index, and a broader operational risk tier.
+7. Calculate a separate project priority score using risk/readiness and time in queue, preserving the team's anti-starvation principle.
+8. Combine the queue data with large-load growth to calculate regional need and queue-pressure measures.
+9. Implement a configurable regional queue-cap framework based on accredited capacity and the portion of each state or region inside MISO.
+10. Demonstrate periodic regional intake-market windows, equal initial deposits, available queue positions, and first-complete/first-served ordering.
+11. Flag neighboring or electrically related projects that may require joint study or shared network upgrades.
+12. Export presentation-ready tables, figures, and CSV files.
+13. Explain limitations, missing information, implementation requirements, and the distinction between a prototype and a production MISO process.
+
+Do not stop after writing notebook cells. Execute the notebook, inspect its outputs, fix errors, rerun it, and leave an executed notebook with visible charts and tables.
+
+## Original business question
+
+The challenge question is:
+
+> How should MISO respond to the rapid growth of large energy users across its footprint while preserving grid reliability?
+
+The supplied large-load data contains synthetic incremental load growth. The generator interconnection queue contains proposed generation projects being studied before connection. The model must connect these two sides of the problem: rapidly increasing electricity demand and a slow, uncertain generation interconnection process.
+
+The notebook is part of a competition presentation. It must show the team's hypothesis, data process, discoveries, recommendation, real-world implementation path, and limitations. Technical sophistication matters, but traceability and operational usefulness matter more.
+
+## Energy-industry context that must remain accurate
+
+- MISO is an independent, not-for-profit regional transmission organization and independent system operator.
+- MISO coordinates the flow of electricity, operates wholesale markets, performs regional planning, and administers interconnection studies. It generally does not own the generators or transmission assets.
+- MISO spans portions of 15 U.S. states and Manitoba and serves approximately 45 million people.
+- MISO is federally regulated and must administer access using transparent, neutral, and consistently applied criteria.
+- A generator interconnection queue is not simply a waiting list. Projects in the same area can interact electrically, change required network upgrades, and affect one another's study results and cost allocations.
+- Nameplate MW is not the same as accredited capacity. Do not substitute one for the other without a clearly labeled scenario or conversion assumption.
+- Transmission Owner identifies the owner/provider responsible for the relevant transmission facilities. It is not the project developer or applicant. Never describe Transmission Owner history as developer history.
+- State borders are administrative boundaries, not electrical boundaries. State-level queues are the team's demonstration structure, while Study Group, Transmission Owner, POI, and neighboring-state analysis provide cross-boundary safeguards.
+- The analysis cannot prove that projects can electrically interconnect. Only engineering studies and power-flow analysis can do that. Label geographic and POI-based relationships as screening indicators.
+
+## Preserve the team's policy proposal
+
+The analytical workflow must implement and communicate the following connected proposal.
+
+### Phase 1: controlled transition and backlog reduction
+
+1. Establish a configurable temporary pause on accepting ordinary new queue proposals. Use six months as an illustrative default scenario, not as a proven optimal duration.
+2. Reorganize the existing large queue into smaller regional queues. Demonstrate state-level queues because this is the team's chosen example.
+3. Preserve a cross-regional review layer so projects in adjacent states, the same Study Group, the same Transmission Owner area, or similar POIs are not studied in isolation.
+4. Assign existing projects a standardized project-risk/readiness score.
+5. Reorder eligible projects using a separate priority score that combines readiness and time already spent in the queue. This prevents new high-priority projects from permanently displacing older viable projects.
+6. Work through regional project groups in stages, identify shared upgrade exposure, and show how one withdrawal can increase the remaining participants' potential cost burden.
+
+### Phase 2: permanent regional intake system
+
+1. Replace continuously open intake with periodic regional application windows.
+2. Set a queue cap for each region based on regional accredited capacity, MISO footprint share, and available study capacity.
+3. Determine how many queue positions or how much queue MW is available before opening the next window.
+4. Use an equal initial reservation deposit for eligible applicants so the first intake stage is not won by the highest bidder. Do not build a highest-price auction.
+5. Allocate available positions to complete, eligible applications on a first-complete/first-served basis. Preserve the team's first-come/first-served concept while making application completeness an eligibility requirement.
+6. After a window closes, study that regional cohort together with relevant neighboring projects and regions.
+7. Apply staged milestones, withdrawal fees, and consequences for late withdrawal, subject to applicable rules and due process.
+8. When a reliable developer/applicant identifier becomes available, allow historical milestone performance and withdrawals to inform future readiness review. Do not attempt this using Transmission Owner.
+9. Open another regional intake window only after the region has available queue capacity and the current study cohort has reached the defined release point.
+
+Use the term **regional intake market** or **regional application window** carefully. Because applicants pay the same initial deposit and positions are not allocated to the highest bidder, this is not a conventional price auction. Explain that distinction rather than silently converting the proposal into an auction.
+
+## Supplied data
+
+Search the repository recursively. Identify files by both filename and schema so minor renaming does not break the notebook.
+
+### Generator interconnection queue
+
+Likely filenames include:
+
+- `GI Interactive Queue (1) (1).csv`
+- `GI Interactive Queue.csv`
+- `03-GI-Interactive-Queue-1-1-.csv`
+
+Expected supplied-file shape is approximately 3,822 rows and 24 columns. Treat this as a validation reference, not a permanent hardcoded requirement.
+
+Expected fields include:
+
+- `Project #`
+- `Request Status`
+- `Queue Date`
+- `Withdrawn Date`
+- `Done Date`
+- `Appl In Service Date`
+- `Transmission Owner`
+- `County`
+- `State`
+- `Study Cycle`
+- `Study Group`
+- `Study Phase`
+- `Service Type`
+- `POI Name`
+- `Summer MW`
+- `Winter MW`
+- `Fuel`
+- `Generating Facility`
+- `Post GIA Status`
+- `Negotiated In Service Date`
+- `Decision Point 1 ERIS MW`
+- `Decision Point 1 NRIS MW`
+- `Decision Point 2 ERIS MW`
+- `Decision Point 2 NRIS MW`
+
+Expected request-status counts in the supplied version are approximately:
+
+- Withdrawn: 2,143
+- Active: 1,030
+- Done: 559
+- Pending Revision Approval: 77
+- Pending Transfer: 9
+- LEGACY: Done: 4
+
+Open projects for the demonstration are `Active`, `Pending Revision Approval`, and `Pending Transfer`, totaling approximately 1,116 in the supplied file.
+
+### Synthetic large-load forecast
+
+Likely filenames include:
+
+- `LARGE_LOADS_BY_STATE (1).xlsx`
+- `LARGE_LOADS_BY_STATE.xlsx`
+- `02-LARGE_LOADS_BY_STATE-1-.xlsx`
+
+Expected worksheet: `DATA`.
+
+Expected columns:
+
+- `STATE`
+- `YEAR`
+- `INCREMENTAL_LOAD_MW`
+
+The supplied file contains approximately 50,691 MW of incremental load for 2026–2032. Expected state totals include approximately 11,997 MW for Indiana, 6,855 MW for Wisconsin, and 5,938 MW for Louisiana. Use these as ingestion checks. If the source file differs, display a warning and use the actual source values.
+
+## External-data architecture
+
+The notebook must run successfully with the two supplied datasets alone. It must also support the external inputs required to operationalize the proposal. Never silently invent an external value. If a required file is unavailable, create a clearly labeled template, continue with the portions that can be calculated, and mark dependent results as unavailable or scenario-based.
+
+Create an in-notebook external-data registry with these columns:
+
+- Dataset
+- Required or Optional
+- Purpose
+- Expected Fields
+- Join Key
+- Source Organization
+- Source URL
+- File Found
+- Data As Of
+- Limitation if Missing
+
+### External input 1: regional accredited capacity
+
+Purpose: calculate the regional queue cap using actual seasonal accredited capacity rather than nameplate queue MW.
+
+Preferred source: official MISO resource-adequacy or Planning Resource Auction materials.
+
+Expected local filename patterns:
+
+- `*accredited*capacity*.csv`
+- `*seasonal*accredited*capacity*.xlsx`
+- `*PRA*capacity*.xlsx`
+
+Minimum schema:
+
+- `Region_ID`
+- `Season`
+- `Accredited_Capacity_MW`
+- `Data_As_Of`
+- `Source_URL`
+
+Do not substitute installed/nameplate capacity without adding a field named `Capacity_Value_Type` and labeling the result as a scenario.
+
+Official starting point: `https://www.misoenergy.org/markets-and-operations/resource-adequacy/`
+
+### External input 2: MISO footprint share
+
+Purpose: avoid treating an entire state as if all of it were under MISO. This is particularly important for partial-footprint examples such as Texas.
+
+Expected local filename patterns:
+
+- `*miso*footprint*.csv`
+- `*footprint*share*.xlsx`
+- `*miso*county*.csv`
+
+Preferred schema:
+
+- `State`
+- `County` when available
+- `MISO_Footprint_Fraction`
+- `Method`
+- `Data_As_Of`
+- `Source_URL`
+
+Require `MISO_Footprint_Fraction` to be between 0 and 1. If no defensible footprint fraction exists, do not use `1.0` for a known partial-footprint region. Leave the capacity cap unavailable and show what information MISO would need.
+
+### External input 3: applicant readiness and developer history
+
+Purpose: improve project-level withdrawal risk using variables that are more causally connected to readiness.
+
+Expected schema:
+
+- `Project #`
+- `Applicant_ID`
+- `Application_Complete_Flag`
+- `Site_Control_Flag`
+- `Permit_Status`
+- `Financing_Status`
+- `Offtake_or_PPA_Status`
+- `Deposit_Posted_Flag`
+- `Equipment_Procurement_Status`
+- `Material_Modification_Count`
+- `Milestones_Met_Rate`
+- `Prior_Projects_Count`
+- `Prior_Withdrawal_Rate`
+- `Readiness_As_Of_Date`
+
+If this data is absent, generate `data/templates/project_readiness_template.csv` containing the headers only. Do not populate synthetic applicant identities or pretend Transmission Owner is Applicant_ID.
+
+### External input 4: state or regional adjacency
+
+Purpose: screen projects for neighboring-region study coordination.
+
+Preferred source: an authoritative state-boundary/adjacency dataset such as U.S. Census Bureau geography. A simple reviewed adjacency CSV is acceptable for a prototype.
+
+Expected schema:
+
+- `State_A`
+- `State_B`
+- `Adjacent_Flag`
+- `Source_URL`
+
+If this file is absent, create a clearly labeled prototype adjacency mapping for states represented in the data and document that geographic adjacency does not establish electrical interaction.
+
+### External input 5: generator fleet and retirement context
+
+Purpose: compare proposed generation, existing supply, and announced retirements with large-load growth.
+
+Preferred official sources:
+
+- EIA-860M generator inventory: `https://www.eia.gov/electricity/data/eia860m/`
+- EIA-930 balancing-authority demand and generation: `https://www.eia.gov/electricity/gridmonitor/`
+
+Useful fields include state, balancing authority, generator status, nameplate MW, operating date, planned retirement date, technology, and primary energy source. Keep these variables in the **regional need/system context** calculation. Do not automatically use them as applicant-readiness labels.
+
+### External input 6: interconnection and large-load research
+
+Use these for benchmarks, sensitivity assumptions, and policy context, not as hidden labels:
+
+- DOE Interconnection Innovation e-Xchange: `https://www.energy.gov/gdo/i2x`
+- Lawrence Berkeley National Laboratory Queued Up: `https://emp.lbl.gov/queues`
+- RMI large-load and flexible-interconnection research: `https://rmi.org/`
+
+Do not scrape MISO's website. Use official downloads, documented APIs, or manually provided files. Cache downloaded external data in `data/external/raw/`, preserve source URLs and access dates, and make all network retrieval optional through `DOWNLOAD_EXTERNAL_DATA = False` by default.
+
+## Data cleaning requirements
+
+Create reusable, clearly named Python functions. Keep the notebook understandable to a business analytics student and judges. Avoid unnecessary classes or excessive abstraction.
+
+At minimum:
+
+1. Parse all relevant dates with `errors="coerce"`.
+2. Preserve `Project #` as an identifier, not a numeric predictor.
+3. Standardize state names and postal abbreviations.
+4. Standardize capitalization, punctuation, and whitespace in categorical fields.
+5. Canonicalize obvious Transmission Owner aliases and remove known trailing MISO owner codes only when the mapping is defensible. Preserve a mapping table in the notebook.
+6. Report duplicate project identifiers.
+7. Report missingness for every candidate feature.
+8. Report impossible date sequences such as withdrawal before queue entry.
+9. Report negative MW or implausible application lead times.
+10. Create `Project_MW = max(Summer MW, Winter MW)` and retain the original seasonal fields.
+11. Create `Log_Project_MW = log1p(Project_MW)`.
+12. Create `Seasonal_MW_Difference = Summer MW - Winter MW`.
+13. Create `Requested_Lead_Months = Appl In Service Date - Queue Date`, and set negative or implausibly long values to missing with a documented threshold.
+14. Create `Queue_Age_Months` as of a fixed, displayed `DATA_AS_OF_DATE` inferred from the file or supplied in configuration.
+15. Create regional identifiers with state as the primary demonstration queue and Study Group/Transmission Owner as secondary coordination dimensions.
+16. Keep the raw DataFrames unchanged. Perform cleaning in copied DataFrames.
+
+## Define project risk correctly
+
+There is no historical 0–9 target in the source data. Do not train a ten-class classifier. Train models against an observable historical outcome and then translate the validated model output to a risk index.
+
+### Primary outcome
+
+Use:
+
+`Withdrawal_Within_36_Months = 1`
+
+when a project has a valid withdrawal date between 0 and 36 months after its queue date. Otherwise use 0 only when the project has a complete 36-month observation window.
+
+Make the horizon configurable through `OUTCOME_MONTHS = 36`.
+
+Determine whether a project is old enough to observe the entire outcome window. Do not treat recent active projects as negative examples merely because they have not withdrawn yet. Exclude withdrawn projects with missing withdrawal dates from the fixed-horizon model and report how many were excluded.
+
+### Optional survival-analysis extension
+
+Because many active projects are right-censored, add a survival-analysis section if date quality is sufficient. Use a transparent Cox proportional-hazards or discrete-time survival model. Treat active projects as censored at `DATA_AS_OF_DATE`. Treat completed projects carefully; they leave the risk set at completion when a valid completion date exists. Explicitly report that missing Done Dates prevent a complete competing-risks implementation.
+
+The survival model is a challenger or robustness analysis, not automatically the production choice. Do not select it unless its date assumptions, validation, and interpretation are sound.
+
+## Prevent target leakage
+
+Create a constant named `PROHIBITED_MODEL_FEATURES` and assert that none enter the feature matrix.
+
+At minimum prohibit:
+
+- `Project #`
+- `Request Status`
+- `Withdrawn Date`
+- `Done Date`
+- `Post GIA Status`
+- `Negotiated In Service Date`
+- `Study Phase` when only the final snapshot is available
+- Decision Point 1 ERIS MW
+- Decision Point 1 NRIS MW
+- Decision Point 2 ERIS MW
+- Decision Point 2 NRIS MW
+- Any variable created directly from the target or final disposition
+
+The decision-point values and final study phase can be used only if dated historical snapshots establish what was known at the scoring date. The supplied static file does not provide those snapshots.
+
+Do not include current queue age in the **intake risk model** when age will also be included in priority. For a survival model, elapsed time may enter through the survival calculation but must not be double-counted in priority.
+
+## Candidate risk models
+
+Build a disciplined model comparison rather than assuming the most complicated model is best.
+
+### Model A: transparent baseline
+
+Use a scikit-learn pipeline containing:
+
+- Median imputation and standardization for numeric variables
+- Most-frequent imputation and one-hot encoding for categorical variables
+- Regularized logistic regression
+
+Candidate intake features from the supplied queue file:
+
+- Log Project MW
+- Seasonal MW Difference
+- Requested Lead Months
+- Fuel
+- Generating Facility
+- Service Type
+- Study Group
+
+Evaluate State and Transmission Owner in a separate configuration named `INCLUDE_LOCATION_FEATURES`. Their historical signal may represent regional conditions or administrative eras rather than applicant readiness. The notebook must compare results with and without them.
+
+### Model B: nonlinear challenger
+
+Use one reasonably tuned nonlinear model, preferably `HistGradientBoostingClassifier` or another scikit-learn gradient-boosting model. Keep tuning limited and reproducible. Do not perform a large, opaque hyperparameter search.
+
+### Model C: optional survival challenger
+
+Use the survival model described above only if dependencies and date completeness permit. If it cannot be implemented defensibly, explain why and continue without failing the notebook.
+
+### Known prototype benchmark
+
+Prior work on this supplied data, after basic category cleaning, produced approximately:
+
+- Logistic regression ROC-AUC: 0.635
+- Random forest ROC-AUC: 0.631
+- Histogram gradient boosting ROC-AUC: 0.587
+
+These are reference values, not targets to force. Reproduce them approximately or explain differences caused by cleaning, cohort selection, or implementation. Do not choose a complex model when it performs worse merely because it sounds more advanced.
+
+## Chronological validation and model selection
+
+Never use an ordinary random train/test split as the primary evaluation. Queue rules, applicant behavior, and withdrawal rates change over time.
+
+Use:
+
+- Development/training cohorts: 2016–2020
+- Later holdout cohorts: 2021–2022
+
+If the refreshed data supports a better set of mature cohorts, use a rolling-origin split while preserving the principle that every validation year occurs after its training years. Explain any change.
+
+For each candidate report:
+
+- Training and test project counts
+- Training and test withdrawal base rates
+- ROC-AUC
+- Precision-recall AUC or average precision
+- Brier score
+- Calibration curve
+- Confusion matrix at an explicitly selected operational threshold
+- Risk-band project counts
+- Observed withdrawal rate by score or tier
+- Performance by State or Study Group when the subgroup has at least 50 observations
+- Model stability across time splits
+
+Use bootstrap confidence intervals or Wilson confidence intervals for observed withdrawal rates by risk tier. Display sample sizes next to rates. Do not interpret a rate from fewer than 50 projects as a stable standard.
+
+### Selection rule
+
+Prefer the simplest model when its performance is close to the best challenger. A reasonable rule is to retain logistic regression unless another model improves chronological ROC-AUC by at least 0.02 **and** improves or preserves Brier score and calibration. Explain the final selection in plain language.
+
+If every model has ROC-AUC below approximately 0.65 or unstable calibration, do not hide the result. Present the model as a limited historical risk-ranking component and state that production performance requires applicant-readiness and milestone data.
+
+## Probability calibration and the 0–9 risk index
+
+The prior fixed probability mapping produced a serious high-score calibration problem. Higher model scores did not consistently correspond to higher observed withdrawal rates, particularly for scores 6–9. Do not repeat the unsupported claim that Risk Score 9 means a 90% actual withdrawal rate.
+
+Produce two distinct outputs:
+
+1. `Predicted_Withdrawal_36M`: the model's calibrated probability estimate, accompanied by a calibration warning when validation is weak.
+2. `Risk_Index_0_9`: a relative risk index.
+
+Construct the relative index from model-development or out-of-fold prediction thresholds:
+
+- 0 = lowest historical risk decile
+- 1 = 10th–20th percentile
+- ...
+- 9 = highest historical risk decile
+
+Learn and store the decile thresholds using training/out-of-fold predictions, then apply those fixed thresholds to holdout and current projects. Do not calculate new quantiles separately for every state because that would make regional scores incomparable.
+
+If duplicate thresholds prevent ten distinct levels, preserve the available levels and explain the issue. Do not add random noise.
+
+Create broader operational tiers based on pooled historical evidence and sample size. Start by testing:
+
+- 0–2: Lower risk
+- 3–5: Moderate risk
+- 6–9: Elevated risk
+
+Prior validation produced approximately 19%, 42%, and 46% withdrawal rates for those three groups. Recalculate rather than hardcode these values. If Moderate and Elevated are not statistically distinguishable, combine them for action purposes while retaining the 0–9 ordering index.
+
+Use isotonic or sigmoid calibration only on a separate calibration cohort or out-of-fold predictions. Never calibrate on the final test cohort. If calibration collapses nearly all predictions into a narrow range, retain the relative index and report that absolute probability calibration is not supported by the current data.
+
+## Model explanations
+
+Provide global and project-level explanations without creating false causal claims.
+
+- For logistic regression, show standardized coefficients and clearly identify categorical reference effects.
+- For a nonlinear model, use permutation importance. Avoid adding SHAP unless it installs cleanly and materially improves the demonstration.
+- For each scored current project, provide up to three plain-language `Risk_Reason` fields based on the strongest model contributions.
+- Label all drivers as historical associations, not causes.
+- Separate project-readiness risk from regional-system stress.
+
+## Regional queue construction
+
+Create a project-level `Region_ID` with the following hierarchy:
+
+1. Use standardized State as the primary queue for the team's demonstration.
+2. Retain Study Group as `Study_Region`.
+3. Retain standardized Transmission Owner as `Transmission_Area`.
+4. Retain County and POI Name for screening and future GIS/network linkage.
+
+Create a regional summary containing at least:
+
+- Region_ID
+- MISO_Footprint_Fraction
+- Total queue projects
+- Open projects
+- Open queue MW
+- Median and 90th-percentile queue age
+- Withdrawn projects
+- Historical withdrawal rate
+- Done projects
+- Large-load growth by year
+- Cumulative large-load growth through 2030 and 2032
+- Accredited capacity MW when supplied
+- Queue-cap MW when available
+- Queue-cap utilization
+- Available queue MW
+- Available project positions when a position-cap assumption is supplied
+- Market-window status
+
+Keep MW, project counts, and accredited capacity conceptually separate.
+
+## Large-load and regional-need model
+
+Aggregate the supplied large-load data by state and year. Create:
+
+- Annual Incremental Load MW
+- Cumulative Incremental Load MW
+- Near-Term Load Growth MW through 2030
+- Total Load Growth MW through 2032
+- Growth concentration by state
+- Share of total MISO-footprint growth
+
+Join large-load states to queue states through a reviewed mapping. Retain states with load but no queue projects and states with queue projects but no supplied load forecast.
+
+Create a configurable `Regional_Need_Score_0_9` based on available evidence. Prefer percentile ranks or min-max scaling with transparent components, such as:
+
+- Cumulative incremental load relative to accredited capacity
+- Active queue MW relative to accredited capacity
+- Announced retirements relative to accredited capacity when available
+- Gap between load growth and lower-risk generation queue MW
+
+Do not treat all queue nameplate MW as dependable supply. Calculate a risk-adjusted queue measure, for example:
+
+`Risk_Adjusted_Queue_MW = Project_MW * (1 - Predicted_Withdrawal_36M)`
+
+Label this as a scenario estimate, not accredited or deliverable capacity.
+
+If accredited capacity is unavailable, calculate a temporary `Load_to_Open_Queue_MW` diagnostic and clearly state that it is not the final capacity-pressure ratio.
+
+## Regional queue-cap framework
+
+Use configurable assumptions in one visible notebook cell:
+
+- `BACKLOG_FREEZE_MONTHS = 6`
+- `QUEUE_CAP_PERCENT =` a clearly marked scenario value
+- `POSITION_CAP_BY_REGION =` optional dictionary or external table
+- `EQUAL_INITIAL_DEPOSIT =` illustrative dollar assumption or `None`
+- `MARKET_WINDOW_MONTHS =` configurable interval
+- `MIN_APPLICATION_COMPLETENESS =` required eligibility threshold
+
+When accredited capacity and footprint share are available, calculate:
+
+`Effective_Accredited_Capacity_MW = Accredited_Capacity_MW * MISO_Footprint_Fraction`
+
+`Regional_Queue_Cap_MW = QUEUE_CAP_PERCENT * Effective_Accredited_Capacity_MW`
+
+`Available_Queue_MW = max(0, Regional_Queue_Cap_MW - Open_Queue_MW)`
+
+Do not convert Available Queue MW to a number of projects unless a transparent standard-slot or position-cap policy is supplied. If demonstrating both approaches, show separate MW-cap and project-count-cap scenarios.
+
+Set `Market_Window_Status` using transparent rules:
+
+- `OPEN` when the region is below its cap and has available study positions.
+- `CLOSED - CAP REACHED` when the regional queue is full.
+- `CLOSED - ACTIVE STUDY WINDOW` when the current cohort has not reached its release point.
+- `DATA REQUIRED` when accredited capacity or footprint share is missing.
+
+## Eligibility, risk, and priority must remain separate
+
+Create an eligibility gate before ranking. A project should not receive a study position solely because it has waited a long time.
+
+Suggested eligibility fields when readiness data exists:
+
+- Complete application
+- Required initial deposit posted
+- Site-control threshold satisfied
+- Required technical models submitted
+- No unresolved material deficiency
+
+When those fields are absent, set `Eligibility_Status = "ASSUMED ELIGIBLE FOR DEMONSTRATION"` and state the limitation.
+
+Use these separate measures:
+
+- `Risk_Index_0_9`: higher means greater modeled withdrawal risk.
+- `Readiness_Score_0_9 = 9 - Risk_Index_0_9`: higher means greater modeled readiness.
+- `Age_Score_0_9`: higher means the project has waited longer.
+- `Regional_Need_Score_0_9`: higher means greater regional need.
+- `Priority_Score_0_9`: higher means study sooner among eligible projects.
+
+Do not add high risk positively to priority. Preserve the team's intended risk-plus-age concept by converting risk to readiness first.
+
+Provide two transparent priority scenarios:
+
+### Core team formula
+
+`Priority = 0.70 * Readiness + 0.30 * Age`
+
+### Regional-need sensitivity
+
+`Priority = 0.50 * Readiness + 0.25 * Age + 0.25 * Regional Need`
+
+Keep weights in the configuration cell, assert that they sum to 1, and allow the user to change them. Normalize or cap queue age transparently. A simple default is:
+
+`Age_Score_0_9 = min(9, 9 * Queue_Age_Months / 60)`
+
+This reaches the maximum age score after five years. Label five years as an illustrative anti-starvation setting rather than an optimized rule.
+
+Sort each regional queue by:
+
+1. Eligibility status
+2. Priority Score descending
+3. Queue Date ascending
+4. Project # ascending
+
+## Periodic intake-market demonstration
+
+Create a small simulation or function showing how a regional application window works:
+
+1. Determine the number of available positions or available MW before the window opens.
+2. Accept only applications meeting the eligibility requirements.
+3. Require the same initial reservation deposit for each eligible application in the first stage.
+4. Order eligible applicants by complete-application timestamp.
+5. Admit applications until the regional cap or position count is reached.
+6. Place remaining eligible applications into the next window rather than continuously expanding the active study cohort.
+7. Close the window and form the regional study cohort.
+
+Because the supplied data lacks application-completeness timestamps and deposit information, create a clearly labeled demonstration input table or function. Do not generate results that appear to describe actual MISO applicants.
+
+## Neighboring-region and shared-upgrade screening
+
+Create a non-engineering screening flag named `Joint_Study_Screen`.
+
+Flag project pairs or groups when one or more conditions apply:
+
+- Same Study Group
+- Same Transmission Owner
+- Same standardized POI Name
+- Same county
+- Adjacent states
+- Projects entered in the same study cycle
+
+Avoid constructing an enormous all-pairs table. Group by POI, Study Group, Transmission Owner, and adjacency using efficient joins.
+
+Create a regional neighbor summary showing potential cross-border study relationships. State clearly that only MISO's transmission models and engineering studies can determine actual network interactions or shared-upgrade requirements.
+
+## Withdrawal and shared-cost scenario
+
+Create a small illustrative scenario showing how shared upgrade costs change when one project leaves a group.
+
+- Inputs: total upgrade cost, participating project MW, allocation rule, and withdrawal sequence.
+- Default allocation: proportional to participating project MW, clearly labeled as an illustrative method.
+- Output: cost by project before and after each withdrawal, percentage increase for remaining projects, and cascade-risk flag.
+- Do not imply that this simplified allocation duplicates MISO's tariff or actual cost-allocation rules.
+
+Connect the scenario to the team's recommendation for staged deposits, milestone requirements, withdrawal fees, and future readiness consequences.
+
+## Required notebook organization
+
+Use the following order. Each section must begin with concise Markdown explaining the purpose and business meaning.
+
+1. Executive summary and connection to the challenge
+2. Team proposal and policy flow
+3. Imports, reproducibility settings, and configuration
+4. File discovery and source registry
+5. Queue and large-load data validation
+6. Data cleaning and data-quality findings
+7. Descriptive queue and withdrawal analysis
+8. Large-load growth analysis
+9. Regional queue construction
+10. External-data interfaces and generated templates
+11. Modeling population, observation window, and target definition
+12. Leakage-safe feature engineering
+13. Chronological model comparison
+14. Probability calibration and risk-index construction
+15. Historical score and tier validation
+16. Current open-project risk scoring
+17. Regional need scoring
+18. Eligibility and priority scoring
+19. Regional queue caps and market-window status
+20. Neighboring-region/joint-study screening
+21. Shared-upgrade withdrawal scenario
+22. Final regional queue tables and presentation charts
+23. Implementation roadmap and limitations
+24. Exported outputs and automated checks
+
+## Required visualizations
+
+Use clear titles, units, legends, and source notes. Prefer accessible colors and avoid overcrowding.
+
+At minimum include:
+
+1. Incremental large-load MW by state and year
+2. Cumulative load growth by state
+3. Open queue MW versus projected load growth by region
+4. Queue outcomes by entry-year cohort
+5. Withdrawal timing distribution
+6. Candidate-model comparison table and chart
+7. ROC curve and calibration curve for the selected model
+8. Observed versus predicted risk by score, with project counts or confidence intervals
+9. Distribution of current active projects by risk tier
+10. Regional queue-cap utilization when capacity data is available
+11. Priority-score composition or risk-versus-age matrix
+12. Shared-upgrade cost before and after withdrawal
+
+If a chart cannot be supported, omit it and explain the missing prerequisite rather than displaying invented data.
+
+## Required exported files
+
+Create `outputs/` if needed and export:
+
+- `outputs/active_project_risk_scores.csv`
+- `outputs/regional_queue_rankings.csv`
+- `outputs/regional_queue_summary.csv`
+- `outputs/large_load_summary.csv`
+- `outputs/model_comparison.csv`
+- `outputs/risk_score_validation.csv`
+- `outputs/external_data_registry.csv`
+- `outputs/joint_study_screen.csv`
+- `outputs/shared_upgrade_withdrawal_scenario.csv`
+
+Save presentation figures as PNG files in `outputs/figures/`. Do not overwrite source data.
+
+The active-project score file should include, when available:
+
+- Project #
+- Region_ID
+- State
+- County
+- Study Group
+- Transmission Owner
+- POI Name
+- Request Status
+- Queue Date
+- Queue Age Months
+- Project MW
+- Fuel
+- Generating Facility
+- Service Type
+- Predicted Withdrawal 36M
+- Risk Index 0–9
+- Operational Risk Tier
+- Readiness Score 0–9
+- Age Score 0–9
+- Regional Need Score 0–9
+- Eligibility Status
+- Priority Score 0–9
+- Regional Rank
+- Risk Reason 1
+- Risk Reason 2
+- Risk Reason 3
+- Joint Study Screen
+
+## Software and coding standards
+
+Prefer these libraries:
+
+- Python 3.11 or newer
+- pandas
+- numpy
+- scikit-learn
+- scipy
+- matplotlib
+- seaborn
+- openpyxl for `.xlsx`
+- pathlib
+- optional lifelines for survival analysis
+
+Use a fixed random seed of 42. Keep installation cells idempotent. Install a missing optional dependency only when needed. Do not require paid APIs, cloud accounts, API keys, or proprietary software.
+
+Use functions with descriptive names, type hints where helpful, and short docstrings. Avoid large classes, deeply nested code, and unnecessarily clever syntax. Keep configuration values together. Make tables readable in Jupyter and round only for display, not internal calculations.
+
+## Automated validation requirements
+
+End the notebook with assertions and a validation summary. At minimum verify:
+
+- Required source columns exist.
+- Project identifiers are not used as model features.
+- No prohibited leakage fields enter the feature matrix.
+- Training years precede test years.
+- Every modeled record has a complete outcome observation window.
+- Risk indices are integers from 0 through 9.
+- Readiness, age, regional need, and priority scores remain between 0 and 9.
+- Priority weights sum to 1.
+- Current scoring output has the same number of rows as the selected open-project population.
+- Regional rank is unique within each region unless explicitly tied.
+- Queue MW, available MW, capacity, and age are not negative.
+- MISO footprint fractions are between 0 and 1.
+- Source row counts and total MW reconcile before and after joins.
+- CSV outputs exist and contain records.
+- Figures render without exceptions.
+
+Execute the notebook using a command equivalent to:
+
+`jupyter nbconvert --to notebook --execute notebooks/MISO_Regional_Queue_Risk_and_Priority_Model.ipynb --output MISO_Regional_Queue_Risk_and_Priority_Model.ipynb --ExecutePreprocessor.timeout=600`
+
+If the command or environment differs, use the repository's working Jupyter execution method. Fix errors and rerun until successful.
+
+## Final notebook conclusions
+
+The final Markdown section must state conclusions supported by the actual run, including:
+
+1. Where large-load growth is concentrated.
+2. How large the active queue and historical withdrawal problem are.
+3. Whether the model reliably ranks project withdrawal risk.
+4. Whether ten separate absolute probability levels are supported.
+5. Which broader tiers are supported by observed outcomes.
+6. Which variables are missing for production readiness scoring.
+7. How regional queue caps and periodic windows address workload rather than creating unlimited studies.
+8. Why neighboring-region review remains necessary.
+9. How the priority score prevents starvation while favoring more viable projects.
+10. Which policy values are illustrative assumptions that MISO would need to select through stakeholder and regulatory processes.
+
+Use language suitable for judges. Do not oversell model accuracy. A transparent finding that current public data is insufficient for precise high-risk probability estimates is a useful result and supports the recommendation that MISO collect standardized readiness data.
+
+## Required implementation roadmap
+
+Conclude with a staged roadmap tied to the team's proposal:
+
+- **0–6 months:** validate policy authority, pause ordinary intake under a defined transition mechanism, establish data standards, build regional queue dashboards, and rescore the backlog.
+- **6–12 months:** pilot one or two regional queues, test caps and application windows, obtain applicant-readiness fields, and monitor model calibration and disparate regional effects.
+- **12–24 months:** expand regional windows, formalize joint-study triggers, integrate accredited capacity and footprint data, and establish withdrawal/milestone rules.
+- **Ongoing:** retrain using dated application snapshots, recalibrate by cohort, audit regional outcomes, review queue-cap assumptions, and publish transparent score definitions and appeals procedures.
+
+Label this as an analytical implementation proposal, not a legal determination or a replacement for tariff/stakeholder review.
+
+## Definition of done
+
+The task is complete only when:
+
+- The notebook exists at the required path.
+- It runs from top to bottom in Codespaces.
+- It uses the actual repository data.
+- It does not use leaked outcome fields as predictors.
+- It compares models chronologically and explains the selection.
+- It handles the known high-score calibration problem honestly.
+- It creates state-level queues plus cross-regional screening.
+- It includes large-load growth, risk, priority, queue caps, and market-window logic as one connected solution.
+- It creates templates for missing operational data instead of inventing values.
+- It exports all supported outputs.
+- It contains a concise judge-facing conclusion and implementation roadmap.
+- All automated validation checks pass.
+
+Before finishing, review the notebook as both an energy expert and a skeptical competition judge. Correct anything that misstates MISO's role, confuses nameplate with accredited capacity, mistakes Transmission Owner for developer, treats state boundaries as electrical boundaries, presents uncalibrated scores as exact probabilities, or departs from the team's regional queue and periodic intake proposal.
